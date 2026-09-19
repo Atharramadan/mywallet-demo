@@ -171,15 +171,15 @@ export function AboutPage() {
               { 
                 icon: MessageCircle, 
                 title: "Telegram AI Assistant", 
-                desc: "Asisten AI finansial multimodal privat untuk pencatatan natural, voice note, dan OCR scan struk.",
-                badge: "Eksklusif Pemilik",
-                badgeColor: "bg-amber-500/10 text-amber-500 border-amber-500/20"
+                desc: "Asisten AI finansial multimodal (Voice Note, OCR struk belanja) berbasis Gemini API. Didesain dengan arsitektur zero-budget & whitelist privat untuk efisiensi kuota dan privasi data.",
+                badge: "Arsitektur Privat",
+                badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20"
               },
               { 
                 icon: Sparkles, 
                 title: "Smart Financial Health (4 Pilar)", 
                 desc: "Diagnosis arus kas tajam, deteksi pengeluaran bocor, simulasi masa depan, dan detektif langganan.",
-                badge: "AI-Powered",
+                badge: "Sistem Cerdas",
                 badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20"
               },
               { 

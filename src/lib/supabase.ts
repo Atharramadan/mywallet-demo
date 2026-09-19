@@ -5,8 +5,8 @@ export const supabase = {
         session: {
           user: {
             id: 'demo-user-123',
-            email: 'athar.demo@mywallet.app',
-            user_metadata: { name: 'Athar Ramadhan' },
+            email: 'demo@mywallet.app',
+            user_metadata: { name: 'Demo User' },
           },
         },
       },

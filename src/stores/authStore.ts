@@ -19,7 +19,7 @@ interface AuthState {
 
 const DEMO_USER: DemoUser = {
   id: 'demo-user-123',
-  email: 'athar.demo@mywallet.app',
+  email: 'demo@mywallet.app',
 };
 
 export const useAuthStore = create<AuthState>((set) => ({

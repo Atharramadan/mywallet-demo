@@ -81,7 +81,14 @@ export const demoStorage = {
   getWealth: (): WealthSnapshot[] => getFromStorage(KEYS.WEALTH, INITIAL_WEALTH_SNAPSHOTS),
   saveWealth: (data: WealthSnapshot[]) => saveToStorage(KEYS.WEALTH, data),
 
-  getSettings: (): AppSettings => getFromStorage(KEYS.SETTINGS, INITIAL_SETTINGS),
+  getSettings: (): AppSettings => {
+    const s = getFromStorage(KEYS.SETTINGS, INITIAL_SETTINGS);
+    if (s.userName === 'Athar Ramadhan') {
+      s.userName = 'Demo User';
+      saveToStorage(KEYS.SETTINGS, s);
+    }
+    return s;
+  },
   saveSettings: (data: AppSettings) => saveToStorage(KEYS.SETTINGS, data),
 
   resetAll: () => {

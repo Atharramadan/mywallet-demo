@@ -526,8 +526,8 @@ export const latestUpdates = [
     icon: "shield",
     features: [
       {
-        title: "Mode Tamu / Demo Sandbox untuk Penguji & Teman",
-        description: "Akun Telegram luar (di luar whitelist) kini dapat mengobrol dengan AI, melakukan simulasi investasi, dan tanya fitur aplikasi tanpa bisa mengakses atau merubah database pemilik asli."
+        title: "Isolasi Fitur AI & Proteksi Akses Tamu",
+        description: "Akses asisten AI dan bot diproteksi dengan sistem whitelist ketat sehingga seluruh kemampuan AI terkunci secara eksklusif hanya untuk pemilik (Owner) tanpa bisa diakses akun luar."
       },
       {
         title: "Isolasi Keamanan 100% (Zero Database Mutation)",

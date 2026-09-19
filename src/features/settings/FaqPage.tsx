@@ -31,13 +31,13 @@ const FAQ_CATEGORIES = [
         a: "Risk Profiler otomatis membedah rasio uang Anda menjadi Uang Aman (Kas, Bank, RDPU) vs Uang Tempur (Saham & Kripto), lalu memberi label tingkat risiko apakah portofolio Anda Terlalu Agresif atau Aman." 
       },
       { 
-        q: "Kenapa saldo Dana Darurat tidak bisa diedit manual?", 
-        a: "Sistem secara otomatis mengunci dan menyinkronkan nilai Dana Darurat Anda dengan besaran instrumen teraman di portofolio Anda, yaitu RDPU (Reksa Dana Pasar Uang)." 
+        q: "Kenapa saldo Dana Darurat saat ini otomatis terhubung ke RDPU?", 
+        a: "Secara default, sistem menggunakan RDPU sebagai acuan karena merupakan instrumen teraman yang likuid dan tahan inflasi tanpa tercampur uang belanja harian. Dukungan fleksibilitas untuk memilih sumber dana darurat lain (Rekening Bank khusus, Kas, atau Deposito) masuk dalam roadmap pembaruan berikutnya." 
       }
     ]
   },
   {
-    category: "Cloud & Integrasi Telegram",
+    category: "Cloud & Asisten AI Telegram",
     icon: <Cloud size={20} className="text-blue" />,
     items: [
       { 
@@ -45,8 +45,12 @@ const FAQ_CATEGORIES = [
         a: "Tidak! Aplikasi ini menggunakan basis data Cloud (Supabase). Semua riwayat keuangan Anda selalu disinkronisasi. Cukup login ulang dengan akun Anda dan semua akan kembali." 
       },
       { 
-        q: "Apa fungsi Bot Telegram MyWallet?", 
-        a: "Bot ini bertindak sebagai asisten pribadi Anda. Ia akan mengingatkan Anda setiap hari untuk mencatat. Anda juga bisa menarik ringkasan saldo, ataupun mencetak Laporan PDF Estetik per periode." 
+        q: "Mengapa Telegram AI Assistant tidak dibuka untuk umum di web demo?", 
+        a: "Telegram Bot didukung model Gemini API dengan pendekatan zero-budget (free tier) yang memiliki batasan kuota harian (rate limit). Demi menjaga kestabilan sistem dari lonjakan pengguna publik serta melindungi privasi data finansial sensitif, akses bot AI diproteksi dengan arsitektur Whitelist khusus untuk akun Owner." 
+      },
+      { 
+        q: "Apa saja kemampuan asisten AI pada akun Owner?", 
+        a: "Asisten AI terhubung langsung via webhook Telegram untuk mencatat transaksi lewat pesan natural, transkripsi suara (Voice Note), pemindaian struk belanja otomatis (Vision OCR), hingga konsultasi kesehatan keuangan secara real-time." 
       }
     ]
   }

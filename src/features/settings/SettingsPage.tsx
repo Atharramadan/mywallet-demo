@@ -8,7 +8,6 @@ import {
   Info,
   ChevronRight,
   User,
-  Download,
   Cloud,
   HelpCircle,
   Sun,
@@ -20,7 +19,6 @@ import { Card } from "../../components/Card";
 import { Mascot } from "../../components/Mascot";
 import { useSettingsStore } from "../../stores/settingsStore";
 import { useToastStore } from "../../stores/toastStore";
-import { useInstallPrompt } from "../../hooks/useInstallPrompt";
 import { ChangePinSheet } from "./ChangePinSheet";
 import { useAuthStore } from "../../stores/authStore";
 import { Modal } from "../../components/Modal";
@@ -32,11 +30,9 @@ export function SettingsPage() {
   const setNotificationsEnabled = useSettingsStore(
     (s) => s.setNotificationsEnabled,
   );
-  const markInstalled = useSettingsStore((s) => s.markInstalled);
   const showToast = useToastStore((s) => s.show);
   const [showChangePin, setShowChangePin] = useState(false);
   const [showLogoutModal, setShowLogoutModal] = useState(false);
-  const { canInstall, isStandalone, promptInstall } = useInstallPrompt();
   
   const authSession = useAuthStore((s) => s.session);
   const authLogout = useAuthStore((s) => s.logout);
@@ -54,13 +50,6 @@ export function SettingsPage() {
     );
   }
 
-  async function handleInstall() {
-    const outcome = await promptInstall();
-    if (outcome === "accepted") {
-      await markInstalled();
-      showToast("MyWallet berhasil diinstal!", "success");
-    }
-  }
 
   return (
     <PageTransition className="mx-auto w-full max-w-full sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl px-4 md:px-8 lg:px-10 pb-28 pt-6 min-h-dvh bg-bg dark:bg-bg-dark">
@@ -130,26 +119,9 @@ export function SettingsPage() {
         Pengingat backup, pencatatan, dan tenggat target tabungan akan muncul
         saat kamu
         <span className="font-medium"> membuka aplikasi</span>.
-        Untuk notifikasi latar belakang, gunakan Bot Telegram MyWallet.
       </p>
 
       <SettingsGroup title="Informasi">
-        <SettingsButton
-          icon={<Download size={18} />}
-          label={isStandalone ? "Aplikasi Terinstal" : "Instal Aplikasi"}
-          onClick={() => {
-            if (isStandalone) {
-              showToast("Aplikasi sudah berhasil terinstal!", "success");
-            } else if (canInstall) {
-              handleInstall();
-            } else {
-              showToast(
-                "Untuk menginstal, tekan menu browser (titik tiga) lalu pilih 'Add to Home Screen' atau 'Install App'. Untuk iPhone (Safari), tekan tombol Share lalu 'Add to Home Screen'.",
-                "info"
-              );
-            }
-          }}
-        />
         <SettingsLink
           to="/pengaturan/tentang"
           icon={<Info size={20} />}

@@ -133,7 +133,7 @@ export const INITIAL_SETTINGS: AppSettings = {
   notificationsEnabled: true,
   hasSeenInstallBanner: true,
   isInstalled: false,
-  userName: 'Athar Ramadhan',
+  userName: 'Demo User',
   wealthTarget: 100000000,
   emergencyFundTarget: 30000000,
   emergencyFundBalance: 18500000,

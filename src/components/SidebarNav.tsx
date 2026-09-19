@@ -119,7 +119,7 @@ export function SidebarNav({ onAddTransaction }: SidebarNavProps) {
             <span className="text-xs font-extrabold text-text dark:text-white">Butuh Bantuan?</span>
           </div>
           <p className="text-[11px] text-text dark:text-gray-200 font-medium leading-relaxed mb-3">
-            Cek panduan lengkap atau baca fitur terbaru AI Otak MyWallet.
+            Cek panduan penggunaan dan informasi fitur aplikasi MyWallet.
           </p>
           <NavLink 
             to="/pengaturan/panduan"

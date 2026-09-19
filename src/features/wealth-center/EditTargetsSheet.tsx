@@ -81,7 +81,9 @@ export function EditTargetsSheet({ open, onClose }: EditTargetsSheetProps) {
               className="w-full rounded-xl bg-surface-muted dark:bg-surface-muted-dark py-3 pl-9 pr-4 font-semibold outline-hidden focus:ring-2 focus:ring-purple/50 cursor-not-allowed"
             />
           </div>
-          <p className="mt-1 text-xs text-blue dark:text-blue-400">Saldo ini sekarang disinkronkan secara otomatis dari saldo RDPU (Wealth Center).</p>
+          <p className="mt-1 text-xs text-blue dark:text-blue-400 leading-relaxed">
+            Otomatis mengikuti nilai RDPU di Wealth Center (standar instrumen teraman). Fleksibilitas multi-sumber (Bank/Kas/Deposito) masuk dalam roadmap pembaruan berikutnya.
+          </p>
         </div>
 
         <button
