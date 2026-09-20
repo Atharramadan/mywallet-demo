@@ -1,5 +1,41 @@
 export const latestUpdates = [
   {
+    version: "v3.2.2",
+    title: "Optimasi Tata Letak 2-Kolom Kalender Desktop 📅🖥️",
+    date: "September 2026",
+    icon: "sparkles",
+    features: [
+      {
+        title: "Layout 2-Kolom Kalender & Riwayat Transaksi",
+        description: "Menata ulang tampilan Kalender di desktop menjadi 2 kolom berdampingan secara ergonomis: kalender berukuran sedang & proporsional di sisi kiri (sticky), serta riwayat mutasi transaksi di sisi kanan."
+      },
+      {
+        title: "Ringkasan Finansial Harian & Tombol Pintas 'Hari Ini'",
+        description: "Menambahkan tombol cepat 'Hari Ini' di header serta kalkulasi ringkasan total pemasukan dan pengeluaran langsung pada tanggal yang sedang dipilih."
+      }
+    ]
+  },
+  {
+    version: "v3.2.1",
+    title: "Penyelarasan FAQ & Proteksi Privasi Identitas 🛡️🔒",
+    date: "September 2026",
+    icon: "sparkles",
+    features: [
+      {
+        title: "Penyelarasan Teks FAQ & Halaman About",
+        description: "Menyelaraskan teks Panduan Penggunaan (FAQ) dan kartu Pencapaian Teknologi pada halaman About sesuai standar portofolio."
+      },
+      {
+        title: "Proteksi Penuh Privasi Identitas Pemilik",
+        description: "Menghapus seluruh penyebutan nama personal pada teks publik, FAQ, dan pesan bot, serta menjaga privasi dengan sebutan 'Owner'."
+      },
+      {
+        title: "Klarifikasi Dana Darurat & AI Telegram",
+        description: "Memperjelas arsitektur penguncian dana darurat berbasis RDPU dan batasan akses AI Telegram berbasis zero-budget free tier."
+      }
+    ]
+  },
+  {
     version: "v3.1.4",
     title: "Penyederhanaan Profil & Konsolidasi Kategori Laporan 🧹📊",
     date: "September 2026",

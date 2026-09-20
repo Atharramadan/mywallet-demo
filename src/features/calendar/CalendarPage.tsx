@@ -1,5 +1,5 @@
 import { useMemo, useState, useEffect } from 'react';
-import { ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
+import { ArrowLeft, ChevronLeft, ChevronRight, Calendar as CalendarIcon } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import clsx from 'clsx';
 import { Card } from '../../components/Card';
@@ -10,7 +10,7 @@ import { useTransactionStore } from '../../stores/transactionStore';
 import { useAccountStore } from '../../stores/accountStore';
 import { useCategoryStore } from '../../stores/categoryStore';
 import {
-  formatMonthYear, addMonths, daysInMonth, firstWeekdayOfMonth, isSameDay, isToday, formatDateLong,
+  formatMonthYear, addMonths, daysInMonth, firstWeekdayOfMonth, isSameDay, isToday, formatDateLong, formatCurrency
 } from '../../lib/formatters';
 import type { Transaction } from '../../db/schema';
 
@@ -35,9 +35,22 @@ export function CalendarPage() {
     ...Array.from({ length: totalDays }, (_, i) => new Date(cursor.getFullYear(), cursor.getMonth(), i + 1)),
   ];
 
-  const dayTransactions = transactions
-    .filter((t) => isSameDay(t.date, selectedDate))
-    .sort((a, b) => b.date.getTime() - a.date.getTime());
+  const dayTransactions = useMemo(
+    () => transactions
+      .filter((t) => isSameDay(t.date, selectedDate))
+      .sort((a, b) => b.date.getTime() - a.date.getTime()),
+    [transactions, selectedDate]
+  );
+
+  const dayIncome = useMemo(
+    () => dayTransactions.filter((t) => t.type === 'income').reduce((acc, t) => acc + t.amount, 0),
+    [dayTransactions]
+  );
+
+  const dayExpense = useMemo(
+    () => dayTransactions.filter((t) => t.type === 'expense').reduce((acc, t) => acc + t.amount, 0),
+    [dayTransactions]
+  );
 
   useEffect(() => {
     setPage(1);
@@ -50,103 +63,152 @@ export function CalendarPage() {
   );
 
   return (
-    <div className="mx-auto w-full max-w-full sm:max-w-md md:max-w-2xl lg:max-w-4xl xl:max-w-5xl px-4 md:px-8 lg:px-10 pb-28 pt-6">
-      <div className="mb-5 flex items-center gap-3">
-        <Link to="/" className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark">
-          <ArrowLeft size={20} />
-        </Link>
-        <h1 className="font-display text-xl font-bold">Kalender Transaksi</h1>
+    <div className="mx-auto w-full max-w-full sm:max-w-md md:max-w-2xl lg:max-w-5xl xl:max-w-6xl px-4 md:px-8 lg:px-10 pb-28 pt-6">
+      <div className="mb-5 flex items-center justify-between">
+        <div className="flex items-center gap-3">
+          <Link to="/" className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors">
+            <ArrowLeft size={20} />
+          </Link>
+          <h1 className="font-display text-xl font-bold">Kalender Transaksi</h1>
+        </div>
+        <button
+          onClick={() => {
+            const today = new Date();
+            setCursor(today);
+            setSelectedDate(today);
+          }}
+          className="rounded-xl border border-border dark:border-border-dark px-3 py-1.5 text-xs font-semibold text-text-muted hover:text-text dark:text-text-muted-dark dark:hover:text-text-dark hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors flex items-center gap-1.5 shadow-sm"
+        >
+          <CalendarIcon size={14} />
+          Hari Ini
+        </button>
       </div>
 
-      <Card>
-        <div className="mb-4 flex items-center justify-between">
-          <button onClick={() => setCursor((c) => addMonths(c, -1))} className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark">
-            <ChevronLeft size={18} />
-          </button>
-          <p className="font-display text-sm font-semibold">{formatMonthYear(cursor)}</p>
-          <button onClick={() => setCursor((c) => addMonths(c, 1))} className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark">
-            <ChevronRight size={18} />
-          </button>
-        </div>
-
-        <div className="grid grid-cols-7 gap-1 text-center">
-          {WEEKDAYS.map((d) => (
-            <div key={d} className="py-1 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
-              {d}
-            </div>
-          ))}
-          {cells.map((date, i) => (
-            <button
-              key={i}
-              disabled={!date}
-              onClick={() => date && setSelectedDate(date)}
-              className={clsx(
-                'relative aspect-square rounded-xl text-sm transition-colors',
-                !date && 'invisible',
-                date && isSameDay(date, selectedDate)
-                  ? 'bg-purple text-white font-semibold'
-                  : date && isToday(date)
-                    ? 'bg-purple/10 text-purple font-semibold'
-                    : 'hover:bg-surface-muted dark:hover:bg-surface-muted-dark'
-              )}
-            >
-              {date?.getDate()}
-              {date && daysWithTx.has(date.toDateString()) && (
-                <span
-                  className={clsx(
-                    'absolute bottom-1 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full',
-                    isSameDay(date, selectedDate) ? 'bg-white' : 'bg-peach'
-                  )}
-                />
-              )}
-            </button>
-          ))}
-        </div>
-      </Card>
-
-      <div className="mt-5">
-        <p className="mb-2 text-xs font-medium text-text-muted dark:text-text-muted-dark">
-          {formatDateLong(selectedDate)}
-        </p>
-        {dayTransactions.length === 0 ? (
+      <div className="flex flex-col lg:flex-row lg:items-start gap-6">
+        {/* KOLOM KIRI (Desktop): Kalender Sedang & Sticky */}
+        <div className="w-full lg:w-[360px] xl:w-[380px] shrink-0 lg:sticky lg:top-6">
           <Card>
-            <EmptyState title="Tidak ada transaksi" mood="idle" />
-          </Card>
-        ) : (
-          <div className="flex flex-col gap-2 rounded-card bg-surface dark:bg-surface-dark p-2 card-shadow">
-            {paginatedTransactions.map((t) => (
-              <TransactionListItem
-                key={t.id}
-                transaction={t}
-                accounts={accounts}
-                categories={categories}
-                onClick={() => setSelectedTx(t)}
-              />
-            ))}
-          </div>
-        )}
+            <div className="mb-4 flex items-center justify-between">
+              <button
+                onClick={() => setCursor((c) => addMonths(c, -1))}
+                className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors"
+                aria-label="Bulan sebelumnya"
+              >
+                <ChevronLeft size={18} />
+              </button>
+              <p className="font-display text-sm font-semibold">{formatMonthYear(cursor)}</p>
+              <button
+                onClick={() => setCursor((c) => addMonths(c, 1))}
+                className="rounded-full p-1.5 hover:bg-surface-muted dark:hover:bg-surface-muted-dark transition-colors"
+                aria-label="Bulan berikutnya"
+              >
+                <ChevronRight size={18} />
+              </button>
+            </div>
 
-        {totalPages > 1 && (
-          <div className="mt-4 flex items-center justify-between">
-            <button
-              onClick={() => setPage(p => Math.max(1, p - 1))}
-              disabled={page === 1}
-              className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:bg-surface-dark card-shadow"
-            >
-              Sebelumnya
-            </button>
-            <span className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
-              Halaman {page} dari {totalPages}
-            </span>
-            <button
-              onClick={() => setPage(p => Math.min(totalPages, p + 1))}
-              disabled={page === totalPages}
-              className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:bg-surface-dark card-shadow"
-            >
-              Selanjutnya
-            </button>
+            <div className="grid grid-cols-7 gap-1 text-center">
+              {WEEKDAYS.map((d) => (
+                <div key={d} className="py-1 text-[11px] font-medium text-text-muted dark:text-text-muted-dark">
+                  {d}
+                </div>
+              ))}
+              {cells.map((date, i) => (
+                <button
+                  key={i}
+                  disabled={!date}
+                  onClick={() => date && setSelectedDate(date)}
+                  className={clsx(
+                    'relative aspect-square rounded-xl text-sm transition-colors flex items-center justify-center font-medium',
+                    !date && 'invisible',
+                    date && isSameDay(date, selectedDate)
+                      ? 'bg-purple text-white font-semibold shadow-sm'
+                      : date && isToday(date)
+                        ? 'bg-purple/10 text-purple font-semibold'
+                        : 'hover:bg-surface-muted dark:hover:bg-surface-muted-dark'
+                  )}
+                >
+                  {date?.getDate()}
+                  {date && daysWithTx.has(date.toDateString()) && (
+                    <span
+                      className={clsx(
+                        'absolute bottom-1.5 left-1/2 h-1 w-1 -translate-x-1/2 rounded-full',
+                        isSameDay(date, selectedDate) ? 'bg-white' : 'bg-peach'
+                      )}
+                    />
+                  )}
+                </button>
+              ))}
+            </div>
+          </Card>
+        </div>
+
+        {/* KOLOM KANAN (Desktop): Riwayat Transaksi */}
+        <div className="flex-1 min-w-0 w-full">
+          <div className="mb-3 flex flex-wrap items-center justify-between gap-2 px-1">
+            <div>
+              <h2 className="font-display text-sm font-bold text-text dark:text-text-dark">
+                {formatDateLong(selectedDate)}
+              </h2>
+              <p className="text-xs text-text-muted dark:text-text-muted-dark">
+                {dayTransactions.length} transaksi tercatat
+              </p>
+            </div>
+            {dayTransactions.length > 0 && (
+              <div className="flex items-center gap-3 text-xs">
+                {dayIncome > 0 && (
+                  <span className="font-semibold text-mint">
+                    +{formatCurrency(dayIncome)}
+                  </span>
+                )}
+                {dayExpense > 0 && (
+                  <span className="font-semibold text-coral">
+                    -{formatCurrency(dayExpense)}
+                  </span>
+                )}
+              </div>
+            )}
           </div>
-        )}
+
+          {dayTransactions.length === 0 ? (
+            <Card>
+              <EmptyState title="Tidak ada transaksi pada tanggal ini" mood="idle" />
+            </Card>
+          ) : (
+            <div className="flex flex-col gap-2 rounded-card bg-surface dark:bg-surface-dark p-2 card-shadow">
+              {paginatedTransactions.map((t) => (
+                <TransactionListItem
+                  key={t.id}
+                  transaction={t}
+                  accounts={accounts}
+                  categories={categories}
+                  onClick={() => setSelectedTx(t)}
+                />
+              ))}
+            </div>
+          )}
+
+          {totalPages > 1 && (
+            <div className="mt-4 flex items-center justify-between">
+              <button
+                onClick={() => setPage((p) => Math.max(1, p - 1))}
+                disabled={page === 1}
+                className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:bg-surface-dark card-shadow"
+              >
+                Sebelumnya
+              </button>
+              <span className="text-sm font-medium text-text-muted dark:text-text-muted-dark">
+                Halaman {page} dari {totalPages}
+              </span>
+              <button
+                onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+                disabled={page === totalPages}
+                className="rounded-xl bg-surface px-4 py-2 text-sm font-semibold disabled:opacity-50 dark:bg-surface-dark card-shadow"
+              >
+                Selanjutnya
+              </button>
+            </div>
+          )}
+        </div>
       </div>
 
       <TransactionDetailSheet transaction={selectedTx} onClose={() => setSelectedTx(null)} />

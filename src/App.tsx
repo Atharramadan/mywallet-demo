@@ -27,7 +27,6 @@ import { BottomNav } from './components/BottomNav';
 import { SidebarNav } from './components/SidebarNav';
 import { ToastHost } from './components/ToastHost';
 import { Mascot } from './components/Mascot';
-import { DemoBanner } from './components/DemoBanner';
 
 function SplashScreen() {
   return (
@@ -53,8 +52,6 @@ export default function App() {
       />
 
       <div className="flex-1 min-w-0 flex flex-col relative z-10 overflow-x-hidden md:pl-64 lg:pl-72">
-        <DemoBanner />
-
         <div key={location.pathname} className="animate-page-enter min-h-dvh flex flex-col relative z-10">
           <Suspense fallback={<SplashScreen />}>
             <Routes location={location}>
