@@ -1,11 +1,11 @@
 import { useMemo, useState } from 'react';
 import { Link } from 'react-router-dom';
-import { ArrowLeft, Target, ShieldCheck, Trophy, Sparkles, Plus, Settings2, Wallet, TrendingUp, Quote } from 'lucide-react';
+import { ArrowLeft, Target, ShieldCheck, Trophy, Sparkles, Plus, Settings2, Wallet, TrendingUp, Quote, ChevronRight } from 'lucide-react';
 import { useWealthStore, parseWealthNote } from '../../stores/wealthStore';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAccountStore, activeAccounts } from '../../stores/accountStore';
 import { useTransactionStore } from '../../stores/transactionStore';
-import { formatCurrency, formatCurrencyCompact } from '../../lib/formatters';
+import { formatCurrency } from '../../lib/formatters';
 import { ResponsiveContainer, AreaChart, Area, XAxis, Tooltip, CartesianGrid, PieChart, Pie, Cell } from 'recharts';
 import { AddSnapshotSheet } from './AddSnapshotSheet';
 import { EditTargetsSheet } from './EditTargetsSheet';
@@ -18,11 +18,13 @@ import { PageTransition } from '../../components/PageTransition';
 
 const CustomTooltip = ({ active, payload, label }: any) => {
   if (active && payload && payload.length) {
+    // Tampilkan entri yang memiliki nilai > 0 atau Net Worth utama
+    const activeEntries = payload.filter((entry: any) => entry.value > 0 || entry.dataKey === 'netWorth');
     return (
       <div className="rounded-xl bg-surface dark:bg-surface-dark p-3 shadow-xl ring-1 ring-border dark:ring-border-dark min-w-37.5">
         <p className="mb-2 text-xs font-bold text-text-muted dark:text-text-muted-dark">{label}</p>
         <div className="flex flex-col gap-1.5">
-          {payload.map((entry: any, index: number) => (
+          {activeEntries.map((entry: any, index: number) => (
             <div key={index} className="flex items-center justify-between gap-4 text-xs">
               <div className="flex items-center gap-1.5">
                 <div className="h-2 w-2 rounded-full" style={{ backgroundColor: entry.color }} />
@@ -53,7 +55,6 @@ export function WealthCenterPage() {
   const [showEditTargets, setShowEditTargets] = useState(false);
   const [showHealthScore, setShowHealthScore] = useState(false);
   const [timeRange, setTimeRange] = useState<'1W' | '1M' | '3M' | '1Y' | 'ALL'>('1M');
-  const [pieChartMode, setPieChartMode] = useState<'all' | 'invest'>('all');
 
   const healthScore = useHealthScore();
 
@@ -93,78 +94,98 @@ export function WealthCenterPage() {
   const currentCrypto = latestSnapshot?.cryptoAmount || 0;
   const currentMutualFund = latestSnapshot?.mutualFundAmount || 0;
 
-  const currentNetWorth = currentCash + currentCrypto + currentMutualFund;
-
   const wealthDetails = parseWealthNote(latestSnapshot?.note);
-  const rdpuAmount = wealthDetails.rdpu || 0;
   
-  // Risk Profiling Logic
-  // Fallback: If JSON doesn't exist, we assume all current mutual fund is RDPU for safe calculation
-  // Or we just use what we have. Let's strictly use JSON if available, else assume safe is just Cash + Mutual Fund.
-  // Actually, if details.rdpu === 0 && details.rdSaham === 0, we can fallback to mutualFundAmount being safe.
-  const isLegacy = wealthDetails.rdpu === 0 && wealthDetails.rdSaham === 0 && wealthDetails.btc === 0 && wealthDetails.eth === 0;
+  // Calculate subtotals from dynamic holdings
+  const totalCrypto = wealthDetails.cryptoHoldings.reduce((sum, c) => sum + (c.amount || 0), 0);
+  const totalSaham = wealthDetails.sahamHoldings.reduce((sum, s) => sum + (s.amount || 0), 0);
+  const totalObligasi = wealthDetails.obligasiHoldings.reduce((sum, o) => sum + (o.amount || 0), 0);
+  const totalReksaHoldings = wealthDetails.reksadanaHoldings?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+  const totalRdpu = wealthDetails.rdpu || 0;
+  const totalRdSaham = wealthDetails.rdSaham || 0;
+  const totalReksa = totalReksaHoldings > 0 ? totalReksaHoldings : (totalRdpu + totalRdSaham);
+  const totalEmas = wealthDetails.emas || 0;
 
-  const currentInvestments = currentCrypto + currentMutualFund;
-  const chartTotal = pieChartMode === 'all' ? currentNetWorth : currentInvestments;
+  // Active amounts (combining dynamic or fallback legacy snapshot)
+  const activeCrypto = totalCrypto > 0 ? totalCrypto : currentCrypto;
+  const activeReksa = totalReksa > 0 ? totalReksa : currentMutualFund;
 
-  const chartDataAll = [
-    { name: 'Kas & Bank', value: currentCash, color: '#10b981' },
-    { name: 'RDPU', value: isLegacy ? currentMutualFund : rdpuAmount, color: '#14b8a6' },
-    { name: 'RD Saham', value: isLegacy ? 0 : wealthDetails.rdSaham, color: '#3b82f6' },
-    { name: 'Bitcoin', value: isLegacy ? currentCrypto : wealthDetails.btc, color: '#f97316' },
-    { name: 'Ethereum', value: isLegacy ? 0 : wealthDetails.eth, color: '#8b5cf6' },
-  ];
-  const pieChartData = (pieChartMode === 'all' ? chartDataAll : chartDataAll.slice(1)).filter(d => d.value > 0);
+  // Total Investasi
+  const dynamicInvestments = totalCrypto + totalSaham + totalObligasi + totalReksa + totalEmas;
+  const isLegacy = dynamicInvestments === 0 && (currentCrypto > 0 || currentMutualFund > 0);
+  const currentInvestments = isLegacy ? (currentCrypto + currentMutualFund) : dynamicInvestments;
+  const currentNetWorth = currentCash + currentInvestments;
 
-  const legendAll = [
-    { name: 'Kas & Bank', value: currentCash, color: 'bg-emerald-500' },
-    { name: 'RDPU (Aman)', value: isLegacy ? currentMutualFund : rdpuAmount, color: 'bg-teal-500' },
-    { name: 'RD Saham / Campuran', value: isLegacy ? 0 : wealthDetails.rdSaham, color: 'bg-blue-500' },
-    { name: 'Bitcoin (BTC)', value: isLegacy ? currentCrypto : wealthDetails.btc, color: 'bg-orange-500' },
-    { name: 'Ethereum (ETH)', value: isLegacy ? 0 : wealthDetails.eth, color: 'bg-violet-500' },
-  ];
-  const legendData = (pieChartMode === 'all' ? legendAll : legendAll.slice(1)).filter(d => d.value > 0);
-  
-  const uangAman = isLegacy ? (currentCash + currentMutualFund) : (currentCash + rdpuAmount);
-  const uangTempur = isLegacy ? currentCrypto : (wealthDetails.rdSaham + wealthDetails.btc + wealthDetails.eth);
-  const totalRiskAssets = uangAman + uangTempur;
-  
-  const riskRatio = totalRiskAssets > 0 ? (uangTempur / totalRiskAssets) * 100 : 0;
+  // Aset Pertumbuhan (Growth Assets): Kripto + Saham + RD Saham
+  const asetPertumbuhan = isLegacy 
+    ? (currentCrypto + (wealthDetails.rdSaham || 0)) 
+    : (totalCrypto + totalSaham + totalRdSaham);
+
+  // Aset Defensif & Stabilitas (Defensive Assets): Kas & Bank + RDPU + Obligasi + Emas
+  const asetDefensif = isLegacy
+    ? (currentCash + (wealthDetails.rdpu || currentMutualFund))
+    : (currentCash + totalRdpu + totalObligasi + totalEmas);
+
+  const totalRiskAssets = asetDefensif + asetPertumbuhan;
+  const riskRatio = totalRiskAssets > 0 ? (asetPertumbuhan / totalRiskAssets) * 100 : 0;
   const isAggressive = riskRatio > 60;
   const isSafe = riskRatio < 50;
+
+  const chartTotal = currentNetWorth;
+
+  const chartDataAll = isLegacy ? [
+    { name: 'Kas & Bank', value: currentCash, color: '#10b981' },
+    { name: 'RDPU', value: currentMutualFund, color: '#14b8a6' },
+    { name: 'Kripto', value: currentCrypto, color: '#f59e0b' },
+  ] : [
+    { name: 'Kas & Bank', value: currentCash, color: '#10b981' },
+    { name: 'Kripto', value: totalCrypto, color: '#f59e0b' },
+    { name: 'Saham', value: totalSaham, color: '#3b82f6' },
+    { name: 'Obligasi / SBN', value: totalObligasi, color: '#14b8a6' },
+    { name: 'Reksa Dana', value: totalReksa, color: '#10b981' },
+    { name: 'Emas', value: totalEmas, color: '#eab308' },
+  ];
+  const pieChartData = chartDataAll.filter(d => d.value > 0);
+
+  const legendAll = isLegacy ? [
+    { name: 'Kas & Bank', value: currentCash, color: 'bg-emerald-500' },
+    { name: 'RDPU (Defensif)', value: currentMutualFund, color: 'bg-teal-500' },
+    { name: 'Kripto (Pertumbuhan)', value: currentCrypto, color: 'bg-amber-500' },
+  ] : [
+    { name: 'Kas & Bank', value: currentCash, color: 'bg-emerald-500' },
+    { name: 'Kripto', value: totalCrypto, color: 'bg-amber-500' },
+    { name: 'Saham', value: totalSaham, color: 'bg-blue-500' },
+    { name: 'Obligasi / SBN', value: totalObligasi, color: 'bg-teal-500' },
+    { name: 'Reksa Dana', value: totalReksa, color: 'bg-emerald-500' },
+    { name: 'Emas', value: totalEmas, color: 'bg-yellow-500' },
+  ];
+  const legendData = legendAll.filter(d => d.value > 0);
 
   const allocationInsight = useMemo(() => {
     if (chartTotal === 0) return null;
     
-    let riskPercentage = 0;
-    if (pieChartMode === 'all') {
-      riskPercentage = (uangTempur / chartTotal) * 100;
-    } else {
-      // In invest mode, risk is crypto + saham vs total investments
-      const investRisk = (isLegacy ? currentCrypto : wealthDetails.btc) + wealthDetails.eth + wealthDetails.rdSaham;
-      riskPercentage = (investRisk / chartTotal) * 100;
-    }
+    const riskPercentage = (asetPertumbuhan / chartTotal) * 100;
     
     if (riskPercentage > 60) {
       return {
-        text: "Porsi aset berisiko (saham & kripto) cukup tinggi. Cocok untuk pertumbuhan cepat, tapi waspadai fluktuasi tajam! 🎢",
+        text: "Porsi Aset Pertumbuhan (saham & kripto) cukup dominan. Potensi hasil tinggi jangka panjang, namun waspadai fluktuasi pasar! 🎢",
         color: "text-rose-600 dark:text-rose-400",
         bg: "bg-rose-500/10 border-rose-500/20"
       };
     } else if (riskPercentage < 20) {
       return {
-        text: "Portofolio sangat aman & defensif. Risiko sangat kecil, tapi pertumbuhan kekayaan mungkin lebih lambat. 🐢",
+        text: "Portofolio sangat aman & defensif. Fondasi sangat stabil saat gejolak pasar, dengan pertumbuhan kekayaan bertahap. 🛡️",
         color: "text-emerald-600 dark:text-emerald-400",
         bg: "bg-emerald-500/10 border-emerald-500/20"
       };
     } else {
       return {
-        text: "Keseimbangan portofolio Anda sangat ideal (Moderat). Stabil saat krisis, tapi tetap tumbuh saat pasar naik! ⚖️",
+        text: "Keseimbangan portofolio sangat ideal (Moderat). Kokoh bertahan saat krisis, namun tetap bertumbuh optimal saat pasar naik! ⚖️",
         color: "text-blue-600 dark:text-blue-400",
         bg: "bg-blue-500/10 border-blue-500/20"
       };
     }
-  }, [pieChartMode, chartTotal, uangTempur, wealthDetails, isLegacy, currentCrypto]);
+  }, [chartTotal, asetPertumbuhan]);
 
   // Calculate daily historical net worth for chart
   const chartData = useMemo(() => {
@@ -225,16 +246,37 @@ export function WealthCenterPage() {
       const dStr = `${year}-${month}-${day}`;
 
       const applicableSnap = sortedSnaps.find(s => s.month <= targetMonthStr);
-      const crypto = applicableSnap?.cryptoAmount || 0;
-      const mutualFund = applicableSnap?.mutualFundAmount || 0;
+      let crypto = 0;
+      let saham = 0;
+      let obligasi = 0;
+      let reksadana = 0;
+      let emas = 0;
 
+      if (applicableSnap) {
+        const details = parseWealthNote(applicableSnap.note);
+        crypto = details.cryptoHoldings.reduce((sum, c) => sum + (c.amount || 0), 0) || (applicableSnap.cryptoAmount || 0);
+        saham = details.sahamHoldings.reduce((sum, s) => sum + (s.amount || 0), 0);
+        obligasi = details.obligasiHoldings.reduce((sum, o) => sum + (o.amount || 0), 0);
+        
+        const rdFromHoldings = details.reksadanaHoldings?.reduce((sum, r) => sum + (r.amount || 0), 0) || 0;
+        const rdFromLegacyDetail = (details.rdpu || 0) + (details.rdSaham || 0);
+        reksadana = rdFromHoldings || rdFromLegacyDetail || (applicableSnap.mutualFundAmount || 0);
+
+        emas = details.emas || 0;
+      }
+
+      const totalInvestasi = crypto + saham + obligasi + reksadana + emas;
       const label = d.toLocaleDateString('id-ID', { day: 'numeric', month: 'short' });
 
       data.unshift({
         label,
-        netWorth: runningCash + crypto + mutualFund,
-        crypto: crypto,
-        mutualFund: mutualFund,
+        netWorth: runningCash + totalInvestasi,
+        crypto,
+        saham,
+        obligasi,
+        reksadana,
+        emas,
+        totalInvestasi,
       });
 
       // Prepare for the previous day by subtracting today's net change
@@ -243,15 +285,28 @@ export function WealthCenterPage() {
     }
 
     return data;
-  }, [snapshots, active, transactions, timeRange]);
+  }, [snapshots, active, transactions, timeRange, currentCash]);
+
+  // Deteksi apakah pengguna berinvestasi di aset terkait (HANYA tampil di grafik jika ada investasi)
+  const hasCrypto = activeCrypto > 0 || chartData.some(d => (d.crypto || 0) > 0);
+  const hasSaham = totalSaham > 0 || chartData.some(d => (d.saham || 0) > 0);
+  const hasObligasi = totalObligasi > 0 || chartData.some(d => (d.obligasi || 0) > 0);
+  const hasReksa = activeReksa > 0 || chartData.some(d => (d.reksadana || 0) > 0);
+  const hasEmas = totalEmas > 0 || chartData.some(d => (d.emas || 0) > 0);
 
   // Insights compare Current (Today) vs 30 Days Ago (chartData[0])
   const baselineNetWorth = chartData.length > 0 ? (chartData[0].netWorth || 0) : 0;
   const netWorthChange = (currentNetWorth || 0) - baselineNetWorth;
   const baselineCrypto = chartData.length > 0 ? (chartData[0].crypto || 0) : 0;
-  const cryptoChange = (currentCrypto || 0) - baselineCrypto;
-  const baselineMutualFund = chartData.length > 0 ? (chartData[0].mutualFund || 0) : 0;
-  const mutualFundChange = (currentMutualFund || 0) - baselineMutualFund;
+  const cryptoChange = (activeCrypto || 0) - baselineCrypto;
+  const baselineReksa = chartData.length > 0 ? (chartData[0].reksadana || 0) : 0;
+  const reksaChange = (activeReksa || 0) - baselineReksa;
+  const baselineSaham = chartData.length > 0 ? (chartData[0].saham || 0) : 0;
+  const sahamChange = (totalSaham || 0) - baselineSaham;
+  const baselineObligasi = chartData.length > 0 ? (chartData[0].obligasi || 0) : 0;
+  const obligasiChange = (totalObligasi || 0) - baselineObligasi;
+  const baselineEmas = chartData.length > 0 ? (chartData[0].emas || 0) : 0;
+  const emasChange = (totalEmas || 0) - baselineEmas;
 
   // Wealth Target
   const wealthTarget = settings?.wealthTarget || 5000000;
@@ -306,7 +361,7 @@ export function WealthCenterPage() {
       ) : (
         <>
           {/* Summary Cards */}
-          <div className="grid grid-cols-2 gap-4 mb-6">
+          <div className="grid grid-cols-2 gap-4 mb-4">
             <div className="rounded-2xl bg-surface dark:bg-surface-dark p-4 card-shadow border border-border dark:border-border-dark relative overflow-hidden flex flex-col justify-between h-27.5">
               <div className="absolute -top-2 -right-2 p-3 opacity-10 pointer-events-none">
                 <Wallet size={64} />
@@ -317,17 +372,53 @@ export function WealthCenterPage() {
                 <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-0.5">Saldo aktif dipakai</p>
               </div>
             </div>
-            <div className="rounded-2xl bg-surface dark:bg-surface-dark p-4 card-shadow border border-border dark:border-border-dark relative overflow-hidden flex flex-col justify-between h-27.5">
-              <div className="absolute -top-2 -right-2 p-3 opacity-10 pointer-events-none">
+            <Link
+              to="/wealth-center/investasi"
+              className="rounded-2xl bg-surface dark:bg-surface-dark p-4 card-shadow border border-purple/30 hover:border-purple/60 relative overflow-hidden flex flex-col justify-between h-27.5 transition-all group active:scale-95"
+            >
+              <div className="absolute -top-2 -right-2 p-3 opacity-10 pointer-events-none group-hover:scale-110 transition-transform">
                 <TrendingUp size={64} />
               </div>
-              <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark z-10">Total Investasi</p>
+              <div className="flex items-center justify-between z-10">
+                <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark">Total Investasi</p>
+                <ChevronRight size={14} className="text-purple group-hover:translate-x-0.5 transition-transform" />
+              </div>
               <div className="z-10 mt-auto">
-                <AnimatedCurrency value={currentCrypto + currentMutualFund} className="font-display text-lg font-bold tabular-nums tracking-tight text-purple" />
-                <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-0.5">Crypto & Reksa Dana</p>
+                <AnimatedCurrency value={currentInvestments} className="font-display text-lg font-bold tabular-nums tracking-tight text-purple" />
+                <p className="text-[10px] text-purple font-medium mt-0.5">Buka Portofolio →</p>
+              </div>
+            </Link>
+          </div>
+
+          {/* Banner Menuju Dashboard Khusus Investasi */}
+          <Link
+            to="/wealth-center/investasi"
+            className="mb-6 block rounded-3xl bg-linear-to-r from-purple/15 via-blue/15 to-purple/5 p-4.5 card-shadow border border-purple/20 transition-all duration-300 hover:border-purple/40 active:scale-[0.99] group"
+          >
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-2xl bg-purple text-white shadow-soft group-hover:scale-105 transition-transform">
+                  <TrendingUp size={22} />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <h3 className="font-display text-sm font-bold text-text dark:text-white">
+                      Portofolio Investasi & Rincian Aset
+                    </h3>
+                    <span className="rounded-full bg-purple/15 px-2 py-0.5 text-[10px] font-bold text-purple">
+                      Dashboard
+                    </span>
+                  </div>
+                  <p className="mt-0.5 text-xs text-text-muted dark:text-text-muted-dark line-clamp-1">
+                    Kelola koin kripto, emiten saham, obligasi, dan emasmu.
+                  </p>
+                </div>
+              </div>
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-surface dark:bg-surface-dark border border-border dark:border-border-dark text-text-muted dark:text-text-muted-dark group-hover:text-purple group-hover:translate-x-0.5 transition-all">
+                <ChevronRight size={18} />
               </div>
             </div>
-          </div>
+          </Link>
 
           {/* Main Net Worth Card & Graph */}
           <div className="mb-6 rounded-3xl bg-surface dark:bg-surface-dark p-6 card-shadow border border-border dark:border-border-dark">
@@ -390,28 +481,93 @@ export function WealthCenterPage() {
                   <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 10, bottom: 10 }}>
                     <defs>
                       <linearGradient id="colorNetWorth" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.5} />
+                        <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
                         <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0} />
                       </linearGradient>
                       <linearGradient id="colorCrypto" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.5} />
+                        <stop offset="5%" stopColor="#f59e0b" stopOpacity={0.35} />
                         <stop offset="95%" stopColor="#f59e0b" stopOpacity={0} />
                       </linearGradient>
-                      <linearGradient id="colorMutualFund" x1="0" y1="0" x2="0" y2="1">
-                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.5} />
+                      <linearGradient id="colorReksa" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#10b981" stopOpacity={0.35} />
                         <stop offset="95%" stopColor="#10b981" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorSaham" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorObligasi" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#14b8a6" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#14b8a6" stopOpacity={0} />
+                      </linearGradient>
+                      <linearGradient id="colorEmas" x1="0" y1="0" x2="0" y2="1">
+                        <stop offset="5%" stopColor="#eab308" stopOpacity={0.35} />
+                        <stop offset="95%" stopColor="#eab308" stopOpacity={0} />
                       </linearGradient>
                     </defs>
                     <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="var(--color-chart-grid)" strokeOpacity={0.7} />
                     <XAxis dataKey="label" tick={{ fontSize: 11, fill: "var(--color-text-muted)" }} axisLine={false} tickLine={false} tickMargin={12} minTickGap={20} />
                     <Tooltip content={<CustomTooltip />} cursor={{ stroke: 'var(--color-border)', strokeWidth: 1, strokeDasharray: '3 3' }} />
                     
-                    {/* Areas rendered from largest to smallest */}
+                    {/* Kurva Net Worth Utama */}
                     <Area type="monotone" dataKey="netWorth" name="Net Worth" stroke="#8b5cf6" strokeWidth={3} fillOpacity={1} fill="url(#colorNetWorth)" activeDot={{ r: 6, fill: "#8b5cf6", stroke: "var(--color-surface)", strokeWidth: 2 }} />
-                    <Area type="monotone" dataKey="mutualFund" name="Reksa Dana" stroke="#10b981" strokeWidth={3} fillOpacity={1} fill="url(#colorMutualFund)" activeDot={{ r: 6, fill: "#10b981", stroke: "var(--color-surface)", strokeWidth: 2 }} />
-                    <Area type="monotone" dataKey="crypto" name="Crypto" stroke="#f59e0b" strokeWidth={3} fillOpacity={1} fill="url(#colorCrypto)" activeDot={{ r: 6, fill: "#f59e0b", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+
+                    {/* Kurva Aset yang HANYA tampil jika pengguna menginputkan aset tersebut (bertambah dinamis di grafik Net Worth tanpa toggle) */}
+                    {hasReksa && (
+                      <Area type="monotone" dataKey="reksadana" name="Reksa Dana" stroke="#10b981" strokeWidth={2} fillOpacity={1} fill="url(#colorReksa)" activeDot={{ r: 5, fill: "#10b981", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+                    )}
+                    {hasSaham && (
+                      <Area type="monotone" dataKey="saham" name="Saham" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorSaham)" activeDot={{ r: 5, fill: "#3b82f6", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+                    )}
+                    {hasObligasi && (
+                      <Area type="monotone" dataKey="obligasi" name="Obligasi" stroke="#14b8a6" strokeWidth={2} fillOpacity={1} fill="url(#colorObligasi)" activeDot={{ r: 5, fill: "#14b8a6", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+                    )}
+                    {hasEmas && (
+                      <Area type="monotone" dataKey="emas" name="Emas" stroke="#eab308" strokeWidth={2} fillOpacity={1} fill="url(#colorEmas)" activeDot={{ r: 5, fill: "#eab308", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+                    )}
+                    {hasCrypto && (
+                      <Area type="monotone" dataKey="crypto" name="Kripto" stroke="#f59e0b" strokeWidth={2} fillOpacity={1} fill="url(#colorCrypto)" activeDot={{ r: 5, fill: "#f59e0b", stroke: "var(--color-surface)", strokeWidth: 2 }} />
+                    )}
                   </AreaChart>
                 </ResponsiveContainer>
+              )}
+            </div>
+
+            {/* Indikator Garis Aset yang Aktif di Grafik Net Worth */}
+            <div className="flex flex-wrap items-center gap-3 mt-3 pt-3 border-t border-border/40 dark:border-border-dark/40 text-xs">
+              <div className="flex items-center gap-1.5 font-bold text-text dark:text-white">
+                <div className="h-2.5 w-2.5 rounded-full bg-purple shadow-xs" />
+                <span>Net Worth</span>
+              </div>
+              {hasReksa && (
+                <div className="flex items-center gap-1.5 text-text-muted dark:text-text-muted-dark font-medium">
+                  <div className="h-2.5 w-2.5 rounded-full bg-emerald-500 shadow-xs" />
+                  <span>Reksa Dana</span>
+                </div>
+              )}
+              {hasSaham && (
+                <div className="flex items-center gap-1.5 text-text-muted dark:text-text-muted-dark font-medium">
+                  <div className="h-2.5 w-2.5 rounded-full bg-blue-500 shadow-xs" />
+                  <span>Saham</span>
+                </div>
+              )}
+              {hasObligasi && (
+                <div className="flex items-center gap-1.5 text-text-muted dark:text-text-muted-dark font-medium">
+                  <div className="h-2.5 w-2.5 rounded-full bg-teal-500 shadow-xs" />
+                  <span>Obligasi</span>
+                </div>
+              )}
+              {hasEmas && (
+                <div className="flex items-center gap-1.5 text-text-muted dark:text-text-muted-dark font-medium">
+                  <div className="h-2.5 w-2.5 rounded-full bg-yellow-500 shadow-xs" />
+                  <span>Emas</span>
+                </div>
+              )}
+              {hasCrypto && (
+                <div className="flex items-center gap-1.5 text-text-muted dark:text-text-muted-dark font-medium">
+                  <div className="h-2.5 w-2.5 rounded-full bg-amber-500 shadow-xs" />
+                  <span>Kripto</span>
+                </div>
               )}
             </div>
           </div>
@@ -429,19 +585,41 @@ export function WealthCenterPage() {
                     <span className="shrink-0">💡</span>
                     <p>Total kekayaan {netWorthChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(netWorthChange))}</span></p>
                   </div>
-                  <div className="flex items-start gap-2 text-sm text-text dark:text-white">
-                    <span className="shrink-0">💡</span>
-                    <p>Crypto {cryptoChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(cryptoChange))}</span></p>
-                  </div>
-                  <div className="flex items-start gap-2 text-sm text-text dark:text-white">
-                    <span className="shrink-0">💡</span>
-                    <p>Reksa Dana {mutualFundChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(mutualFundChange))}</span></p>
-                  </div>
+                  {hasCrypto && (
+                    <div className="flex items-start gap-2 text-sm text-text dark:text-white">
+                      <span className="shrink-0">💡</span>
+                      <p>Kripto {cryptoChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(cryptoChange))}</span></p>
+                    </div>
+                  )}
+                  {hasReksa && (
+                    <div className="flex items-start gap-2 text-sm text-text dark:text-white">
+                      <span className="shrink-0">💡</span>
+                      <p>Reksa Dana {reksaChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(reksaChange))}</span></p>
+                    </div>
+                  )}
+                  {hasSaham && (
+                    <div className="flex items-start gap-2 text-sm text-text dark:text-white">
+                      <span className="shrink-0">💡</span>
+                      <p>Saham {sahamChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(sahamChange))}</span></p>
+                    </div>
+                  )}
+                  {hasObligasi && (
+                    <div className="flex items-start gap-2 text-sm text-text dark:text-white">
+                      <span className="shrink-0">💡</span>
+                      <p>Obligasi {obligasiChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(obligasiChange))}</span></p>
+                    </div>
+                  )}
+                  {hasEmas && (
+                    <div className="flex items-start gap-2 text-sm text-text dark:text-white">
+                      <span className="shrink-0">💡</span>
+                      <p>Emas {emasChange >= 0 ? 'bertambah' : 'berkurang'} <span className="font-bold">{formatCurrency(Math.abs(emasChange))}</span></p>
+                    </div>
+                  )}
                 </>
               )}
               <div className="flex items-start gap-2 text-sm text-text dark:text-white">
                 <span className="shrink-0">💡</span>
-                <p>Progress menuju target {formatCurrencyCompact(wealthTarget)} mencapai <span className="font-bold">{wealthProgress.toFixed(1)}%</span></p>
+                <p>Progress menuju target {formatCurrency(wealthTarget)} mencapai <span className="font-bold">{wealthProgress.toFixed(1)}%</span></p>
               </div>
               {emergencyTarget > 0 && (
                 <div className="flex items-start gap-2 text-sm text-text dark:text-white">
@@ -510,52 +688,52 @@ export function WealthCenterPage() {
                     <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
                     <span className="relative inline-flex rounded-full h-2 w-2 bg-rose-500"></span>
                   </span>
-                  Agresif (High Risk)
+                  Agresif (Growth Heavy)
                 </div>
               )}
               {isSafe && (
                 <div className="flex items-center gap-1.5 rounded-full bg-emerald-500/10 px-3 py-1 text-xs font-semibold text-emerald-600 dark:text-emerald-400 border border-emerald-500/20">
                   <ShieldCheck size={12} />
-                  Aman & Stabil
+                  Defensif & Stabil
                 </div>
               )}
               {!isAggressive && !isSafe && (
                 <div className="flex items-center gap-1.5 rounded-full bg-blue/10 px-3 py-1 text-xs font-semibold text-blue border border-blue/20">
-                  Seimbang (Moderate)
+                  Seimbang (Moderat)
                 </div>
               )}
             </div>
 
             <div className="grid grid-cols-2 gap-4 mb-4">
               <div className="rounded-2xl bg-surface-muted dark:bg-surface-muted-dark p-4 border border-border dark:border-border-dark">
-                <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark">Uang Aman (Safe)</p>
+                <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark">Aset Defensif & Stabilitas</p>
                 <div className="mt-2">
-                  <AnimatedCurrency value={uangAman} className="font-display text-lg font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400" />
-                  <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-1">Kas, Bank, RDPU</p>
+                  <AnimatedCurrency value={asetDefensif} className="font-display text-lg font-bold tabular-nums tracking-tight text-emerald-600 dark:text-emerald-400" />
+                  <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-1">Kas, RDPU, Emas, Obligasi</p>
                 </div>
               </div>
               <div className="rounded-2xl bg-surface-muted dark:bg-surface-muted-dark p-4 border border-border dark:border-border-dark">
-                <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark">Uang Tempur (Risk)</p>
+                <p className="text-xs font-bold text-text-muted dark:text-text-muted-dark">Aset Pertumbuhan (Growth)</p>
                 <div className="mt-2">
-                  <AnimatedCurrency value={uangTempur} className="font-display text-lg font-bold tabular-nums tracking-tight text-rose-600 dark:text-rose-400" />
-                  <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-1">RD Saham, BTC, ETH</p>
+                  <AnimatedCurrency value={asetPertumbuhan} className="font-display text-lg font-bold tabular-nums tracking-tight text-amber-600 dark:text-amber-400" />
+                  <p className="text-[10px] text-text-muted dark:text-text-muted-dark mt-1">Kripto, Saham, RD Saham</p>
                 </div>
               </div>
             </div>
 
             <div className="w-full h-2 rounded-full overflow-hidden flex bg-surface-muted dark:bg-surface-muted-dark">
               <div 
-                style={{ width: `${totalRiskAssets > 0 ? (uangAman / totalRiskAssets) * 100 : 50}%` }} 
+                style={{ width: `${totalRiskAssets > 0 ? (asetDefensif / totalRiskAssets) * 100 : 50}%` }} 
                 className="h-full bg-emerald-500 transition-all duration-1000"
               />
               <div 
-                style={{ width: `${totalRiskAssets > 0 ? (uangTempur / totalRiskAssets) * 100 : 50}%` }} 
-                className="h-full bg-rose-500 transition-all duration-1000"
+                style={{ width: `${totalRiskAssets > 0 ? (asetPertumbuhan / totalRiskAssets) * 100 : 50}%` }} 
+                className="h-full bg-linear-to-r from-amber-500 to-orange-500 transition-all duration-1000"
               />
             </div>
             <div className="flex justify-between mt-2 text-[10px] font-bold text-text-muted dark:text-text-muted-dark">
-              <span>{Math.round(totalRiskAssets > 0 ? (uangAman / totalRiskAssets) * 100 : 50)}% Aman</span>
-              <span>{Math.round(riskRatio)}% Tempur</span>
+              <span>{Math.round(totalRiskAssets > 0 ? (asetDefensif / totalRiskAssets) * 100 : 50)}% Defensif</span>
+              <span>{Math.round(riskRatio)}% Pertumbuhan</span>
             </div>
           </div>
 
@@ -570,40 +748,39 @@ export function WealthCenterPage() {
           {/* Alokasi Aset (Pie Chart) */}
           <div className="mb-6 rounded-3xl bg-surface dark:bg-surface-dark p-6 card-shadow border border-border dark:border-border-dark flex flex-col">
             <div className="flex items-center justify-between mb-6">
-              <h3 className="font-display text-lg font-bold">
-                Alokasi Aset
-              </h3>
-              
-              <div className="flex bg-surface-muted dark:bg-surface-muted-dark p-1 rounded-full border border-border dark:border-border-dark">
-                <button
-                  onClick={() => setPieChartMode('all')}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
-                    pieChartMode === 'all'
-                      ? 'bg-surface dark:bg-surface-dark text-text dark:text-text-dark shadow-sm'
-                      : 'text-text-muted dark:text-text-muted-dark hover:text-text dark:hover:text-text-dark'
-                  }`}
-                >
-                  Semua
-                </button>
-                <button
-                  onClick={() => setPieChartMode('invest')}
-                  className={`px-3 py-1 text-xs font-bold rounded-full transition-all ${
-                    pieChartMode === 'invest'
-                      ? 'bg-surface dark:bg-surface-dark text-text dark:text-text-dark shadow-sm'
-                      : 'text-text-muted dark:text-text-muted-dark hover:text-text dark:hover:text-text-dark'
-                  }`}
-                >
-                  Investasi
-                </button>
+              <div>
+                <h3 className="font-display text-lg font-bold">
+                  Alokasi Seluruh Aset
+                </h3>
+                <p className="text-xs text-text-muted dark:text-text-muted-dark">
+                  Kas, bank, dan seluruh portofolio
+                </p>
               </div>
+              
+              <Link
+                to="/wealth-center/investasi"
+                className="flex items-center gap-1 text-xs font-bold text-purple hover:underline"
+              >
+                Detail Portofolio →
+              </Link>
             </div>
             
             {chartTotal > 0 ? (
               <div className="flex flex-col gap-6">
-                <div className="flex justify-center items-center relative h-45 w-full">
-                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
+                <div className="flex justify-center items-center relative h-52 w-full">
+                  <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none px-2 text-center">
                     <span className="text-[10px] font-bold text-text-muted dark:text-text-muted-dark uppercase tracking-widest">Total</span>
-                    <span className="text-xl font-display font-bold tabular-nums leading-none mt-1">{formatCurrencyCompact(chartTotal)}</span>
+                    <span className={`font-display font-bold tabular-nums leading-tight mt-0.5 max-w-[140px] truncate ${
+                      formatCurrency(chartTotal).length > 14 
+                        ? 'text-xs' 
+                        : formatCurrency(chartTotal).length > 11 
+                        ? 'text-sm' 
+                        : formatCurrency(chartTotal).length > 9 
+                        ? 'text-base' 
+                        : 'text-lg'
+                    }`}>
+                      {formatCurrency(chartTotal)}
+                    </span>
                   </div>
                   <ResponsiveContainer width="100%" height="100%">
                     <PieChart>
@@ -611,8 +788,8 @@ export function WealthCenterPage() {
                         data={pieChartData}
                         cx="50%"
                         cy="50%"
-                        innerRadius={65}
-                        outerRadius={85}
+                        innerRadius={76}
+                        outerRadius={96}
                         cornerRadius={8}
                         paddingAngle={4}
                         dataKey="value"
@@ -642,7 +819,7 @@ export function WealthCenterPage() {
                       </div>
                       <div className="flex items-center gap-3">
                         <span className="text-text-muted dark:text-text-muted-dark text-xs">{((item.value / chartTotal) * 100).toFixed(1)}%</span>
-                        <span className="font-bold tabular-nums w-21.25 text-right">{formatCurrencyCompact(item.value)}</span>
+                        <span className="font-bold tabular-nums w-21.25 text-right">{formatCurrency(item.value)}</span>
                       </div>
                     </div>
                   ))}
@@ -682,7 +859,7 @@ export function WealthCenterPage() {
               
               <div className="flex items-end justify-between mb-3 relative z-10">
                 <p className="font-display text-4xl font-black tracking-tighter drop-shadow-md">{wealthProgress.toFixed(1)}%</p>
-                <p className="text-xs font-semibold text-white/80 pb-1.5 uppercase tracking-wide">Sisa {formatCurrencyCompact(wealthRemaining)}</p>
+                <p className="text-xs font-semibold text-white/80 pb-1.5 uppercase tracking-wide">Sisa {formatCurrency(wealthRemaining)}</p>
               </div>
               <div className="h-2 w-full rounded-pill bg-black/20 overflow-hidden relative z-10 glass-edge shadow-inner">
                 <div 
@@ -712,7 +889,7 @@ export function WealthCenterPage() {
                 
                 <div className="flex items-end justify-between mb-3 relative z-10">
                   <p className="font-display text-4xl font-black tracking-tighter drop-shadow-md">{emergencyProgress.toFixed(1)}%</p>
-                  <p className="text-xs font-semibold text-white/80 pb-1.5 uppercase tracking-wide">Sisa {formatCurrencyCompact(emergencyRemaining)}</p>
+                  <p className="text-xs font-semibold text-white/80 pb-1.5 uppercase tracking-wide">Sisa {formatCurrency(emergencyRemaining)}</p>
                 </div>
                 <div className="h-2 w-full rounded-pill bg-black/20 overflow-hidden relative z-10 glass-edge shadow-inner">
                   <div 

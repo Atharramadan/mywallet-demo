@@ -5,6 +5,7 @@ import { Mascot } from "../../components/Mascot";
 
 import { latestUpdates } from "../../data/changelog";
 
+// v3.5.9: Knowledge Base AI Terpadu (Sejarah 12 Juli 2026 & Akses Database 4 Model)
 export function ChangelogPage() {
   const latestVer = latestUpdates[0];
   
@@ -618,7 +619,7 @@ export function ChangelogPage() {
                     <Sparkles size={14} />
                   </span>
                   <span className="text-sm leading-snug text-text-muted dark:text-text-muted-dark">
-                    Penambahan sistem Keamanan PIN Biometrik & Enkripsi AES-256 tingkat bank.
+                    Penambahan sistem Keamanan Password & Kunci PIN 6-Digit.
                   </span>
                 </li>
                 <li className="flex items-start gap-2">

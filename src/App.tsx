@@ -21,6 +21,7 @@ const FaqPage = lazy(() => import('./features/settings/FaqPage').then((m) => ({ 
 const ChangelogPage = lazy(() => import('./features/settings/ChangelogPage').then((m) => ({ default: m.ChangelogPage })));
 const WealthCenterPage = lazy(() => import('./features/wealth-center/WealthCenterPage').then((m) => ({ default: m.WealthCenterPage })));
 const WealthAchievementsPage = lazy(() => import('./features/wealth-center/WealthAchievementsPage').then((m) => ({ default: m.WealthAchievementsPage })));
+const InvestmentPortfolioPage = lazy(() => import('./features/wealth-center/InvestmentPortfolioPage').then((m) => ({ default: m.InvestmentPortfolioPage })));
 const BudgetsPage = lazy(() => import('./features/budgets/BudgetsPage').then((m) => ({ default: m.BudgetsPage })));
 
 import { BottomNav } from './components/BottomNav';
@@ -72,6 +73,7 @@ export default function App() {
               <Route path="/pengaturan/changelog" element={<ChangelogPage />} />
               <Route path="/wealth-center" element={<WealthCenterPage />} />
               <Route path="/wealth-center/achievements" element={<WealthAchievementsPage />} />
+              <Route path="/wealth-center/investasi" element={<InvestmentPortfolioPage />} />
             </Routes>
           </Suspense>
         </div>

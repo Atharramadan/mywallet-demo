@@ -1,7 +1,7 @@
 {
   "name": "mywallet-demo",
   "private": true,
-  "version": "3.2.2",
+  "version": "3.5.9",
   "type": "module",
   "scripts": {
     "dev": "vite",

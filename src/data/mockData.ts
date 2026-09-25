@@ -102,25 +102,110 @@ export const INITIAL_WEALTH_SNAPSHOTS: WealthSnapshot[] = [
   {
     id: 1,
     month: getMonthStr(0),
-    cryptoAmount: 14200000,
+    cryptoAmount: 16700000,
     mutualFundAmount: 25500000,
-    note: JSON.stringify({ rdpu: 18500000, rdSaham: 7000000, btc: 10200000, eth: 4000000 }),
+    note: JSON.stringify({
+      rdpu: 18500000,
+      rdSaham: 7000000,
+      btc: 10200000,
+      eth: 4000000,
+      emas: 14850000,
+      emasDetails: { type: 'fisik', weightGram: 10, pricePerGram: 1485000, lastUpdated: new Date().toISOString() },
+      cryptoHoldings: [
+        { id: 'c1', name: 'Bitcoin (BTC)', amount: 10200000 },
+        { id: 'c2', name: 'Ethereum (ETH)', amount: 4000000 },
+        { id: 'c3', name: 'Solana (SOL)', amount: 2500000 },
+      ],
+      sahamHoldings: [
+        { id: 's1', name: 'BBCA (Bank Central Asia)', amount: 12500000 },
+        { id: 's2', name: 'BBRI (Bank Rakyat Indonesia)', amount: 8000000 },
+        { id: 's3', name: 'TLKM (Telkom Indonesia)', amount: 4500000 },
+      ],
+      obligasiHoldings: [
+        { id: 'o1', name: 'ORI026 (Obligasi Negara Ritel)', amount: 10000000 },
+        { id: 'o2', name: 'SR021 (Sukuk Ritel)', amount: 5000000 },
+      ],
+      reksadanaHoldings: [
+        { id: 'r1', name: 'RDPU Sucorinvest Sharia Money Market', amount: 18500000 },
+        { id: 'r2', name: 'RDPT Danamas Pasifik Stabil', amount: 7000000 },
+      ],
+      emergencyFundSources: [
+        { id: 'ef1', name: 'RDPU Sucorinvest Sharia', amount: 18500000 },
+        { id: 'ef2', name: 'Tabungan Khusus BCA', amount: 8000000 },
+      ],
+    }),
     createdAt: daysAgo(2),
   },
   {
     id: 2,
     month: getMonthStr(1),
-    cryptoAmount: 12500000,
+    cryptoAmount: 14500000,
     mutualFundAmount: 23000000,
-    note: JSON.stringify({ rdpu: 16500000, rdSaham: 6500000, btc: 9000000, eth: 3500000 }),
+    note: JSON.stringify({
+      rdpu: 16500000,
+      rdSaham: 6500000,
+      btc: 9000000,
+      eth: 3500000,
+      emas: 13500000,
+      emasDetails: { type: 'fisik', weightGram: 10, pricePerGram: 1350000, lastUpdated: daysAgo(32).toISOString() },
+      cryptoHoldings: [
+        { id: 'c1', name: 'Bitcoin (BTC)', amount: 9000000 },
+        { id: 'c2', name: 'Ethereum (ETH)', amount: 3500000 },
+        { id: 'c3', name: 'Solana (SOL)', amount: 2000000 },
+      ],
+      sahamHoldings: [
+        { id: 's1', name: 'BBCA (Bank Central Asia)', amount: 11000000 },
+        { id: 's2', name: 'BBRI (Bank Rakyat Indonesia)', amount: 7500000 },
+        { id: 's3', name: 'TLKM (Telkom Indonesia)', amount: 4000000 },
+      ],
+      obligasiHoldings: [
+        { id: 'o1', name: 'ORI026 (Obligasi Negara Ritel)', amount: 10000000 },
+        { id: 'o2', name: 'SR021 (Sukuk Ritel)', amount: 5000000 },
+      ],
+      reksadanaHoldings: [
+        { id: 'r1', name: 'RDPU Sucorinvest Sharia Money Market', amount: 16500000 },
+        { id: 'r2', name: 'RDPT Danamas Pasifik Stabil', amount: 6500000 },
+      ],
+      emergencyFundSources: [
+        { id: 'ef1', name: 'RDPU Sucorinvest Sharia', amount: 16500000 },
+        { id: 'ef2', name: 'Tabungan Khusus BCA', amount: 7000000 },
+      ],
+    }),
     createdAt: daysAgo(32),
   },
   {
     id: 3,
     month: getMonthStr(2),
-    cryptoAmount: 10800000,
+    cryptoAmount: 12000000,
     mutualFundAmount: 20500000,
-    note: JSON.stringify({ rdpu: 15000000, rdSaham: 5500000, btc: 7800000, eth: 3000000 }),
+    note: JSON.stringify({
+      rdpu: 15000000,
+      rdSaham: 5500000,
+      btc: 7800000,
+      eth: 3000000,
+      emas: 12000000,
+      emasDetails: { type: 'fisik', weightGram: 10, pricePerGram: 1200000, lastUpdated: daysAgo(62).toISOString() },
+      cryptoHoldings: [
+        { id: 'c1', name: 'Bitcoin (BTC)', amount: 7800000 },
+        { id: 'c2', name: 'Ethereum (ETH)', amount: 3000000 },
+        { id: 'c3', name: 'Solana (SOL)', amount: 1200000 },
+      ],
+      sahamHoldings: [
+        { id: 's1', name: 'BBCA (Bank Central Asia)', amount: 10000000 },
+        { id: 's2', name: 'BBRI (Bank Rakyat Indonesia)', amount: 7000000 },
+        { id: 's3', name: 'TLKM (Telkom Indonesia)', amount: 3500000 },
+      ],
+      obligasiHoldings: [
+        { id: 'o1', name: 'ORI026 (Obligasi Negara Ritel)', amount: 10000000 },
+      ],
+      reksadanaHoldings: [
+        { id: 'r1', name: 'RDPU Sucorinvest Sharia Money Market', amount: 15000000 },
+        { id: 'r2', name: 'RDPT Danamas Pasifik Stabil', amount: 5500000 },
+      ],
+      emergencyFundSources: [
+        { id: 'ef1', name: 'RDPU Sucorinvest Sharia', amount: 15000000 },
+      ],
+    }),
     createdAt: daysAgo(62),
   },
 ];

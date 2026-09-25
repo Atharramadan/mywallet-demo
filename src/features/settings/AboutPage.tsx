@@ -4,7 +4,7 @@ import {
   ChevronLeft, Star, ShieldCheck, FileText, 
   Lock, Zap, TrendingUp, Cloud, Ban, CreditCard, LineChart,
   PieChart, MessageCircle, Sparkles, BarChart, Info, Smartphone,
-  Shield, Megaphone, ChevronRight, Activity, Target
+  Shield, Megaphone, ChevronRight, Activity, Target, Calendar
 } from "lucide-react";
 import { Mascot } from "../../components/Mascot";
 import { Card } from "../../components/Card";
@@ -80,20 +80,28 @@ export function AboutPage() {
             "Kontrol Keuangan. Bangun Kekayaan.<br/>Raih Kebebasan Finansial."
           </h2>
           <p className="mt-3 text-center text-sm text-text-muted dark:text-text-muted-dark max-w-[320px] leading-relaxed mx-auto">
-            MyWallet membantu Anda mencatat transaksi, memantau aset, dan memahami perjalanan keuangan dalam satu tempat yang aman, sederhana, dan nyaman digunakan setiap hari.
+            <strong className="text-text dark:text-text-dark font-display">MyWallet</strong> mulai dikembangkan pada tanggal <strong className="text-purple font-display">12 Juli 2026</strong> sebagai aplikasi pencatatan keuangan modern dan pelacak kekayaan (<em className="not-italic text-text dark:text-text-dark font-medium">Net Worth</em>) yang tenang, privat, dan bebas biaya langganan.
           </p>
         </section>
 
-        {/* SECTION 2 - OUR MISSION */}
+        {/* SECTION 2 - ABOUT & MISSION STORY */}
         <section className="mt-10 animate-fade-in-up animation-delay-100">
           <div className="relative overflow-hidden rounded-3xl bg-surface/80 dark:bg-surface-dark border border-border dark:border-border-dark p-6 shadow-sm">
             <div className="absolute top-0 right-0 -mr-8 -mt-8 w-32 h-32 bg-purple/10 dark:bg-purple/10 blur-3xl rounded-full" />
             <h3 className="font-display text-xs font-bold uppercase tracking-widest text-purple mb-3 flex items-center gap-2">
-              <Target size={14} /> Misi Kami
+              <Target size={14} /> Tentang & Misi MyWallet
             </h3>
-            <p className="text-sm text-justify text-text-muted dark:text-text-muted-dark leading-relaxed relative z-10">
-              Kami percaya bahwa pengelolaan keuangan pribadi seharusnya sederhana, transparan, dan dapat diakses oleh semua orang. MyWallet hadir untuk membantu pengguna membangun kebiasaan finansial yang lebih baik, memahami kondisi keuangan mereka, dan bergerak menuju kebebasan finansial secara bertahap.
-            </p>
+            <div className="space-y-3 text-sm text-justify text-text-muted dark:text-text-muted-dark leading-relaxed relative z-10">
+              <p>
+                Banyak orang memulai mencatat keuangan dengan niat baik, namun sering kali terhenti karena aplikasi yang rumit, terganggu oleh iklan, atau fitur penting dikunci di balik biaya langganan bulanan.
+              </p>
+              <p>
+                Mulai dikembangkan pada tanggal 12 Juli 2026, MyWallet lahir dari sebuah visi sederhana: menciptakan ruang finansial pribadi yang tenang, bersih, dan mandiri. Kami menyatukan kedisiplinan pencatatan kas harian (dengan Peta Panas Kalender & Habit Tracker) dengan pemantauan aset jangka panjang (Kripto, Saham, Reksa Dana, Obligasi/SBN, dan Emas Murni 24K fisik) serta evaluasi risiko berimbang ala Bibit.
+              </p>
+              <p>
+                Dengan proteksi Password akun dan kunci PIN 6-digit di perangkat Anda, seluruh data tersimpan privat dan aman. Bagi kami, setiap rupiah yang tercatat adalah sebuah keputusan sadar menuju kebebasan finansial nyata.
+              </p>
+            </div>
           </div>
         </section>
 
@@ -171,7 +179,7 @@ export function AboutPage() {
               { 
                 icon: MessageCircle, 
                 title: "Telegram AI Assistant", 
-                desc: "Asisten AI finansial multimodal (Voice Note, OCR struk belanja) berbasis Gemini API. Didesain dengan arsitektur zero-budget & whitelist privat untuk efisiensi kuota dan privasi data.",
+                desc: "Asisten AI finansial personal berbasis Google Gemini API. Didesain dengan arsitektur eksklusif (single-user) untuk Owner guna menjamin privasi penuh data finansial dan efisiensi kuota secara terukur.",
                 badge: "Arsitektur Privat",
                 badgeColor: "bg-blue-500/10 text-blue-500 border-blue-500/20"
               },
@@ -223,6 +231,7 @@ export function AboutPage() {
           <Card padded={false} className="divide-y divide-border dark:divide-border-dark overflow-hidden bg-surface dark:bg-surface-dark border-border dark:border-border-dark shadow-sm">
             {[
               { label: "Versi Aplikasi", value: `v${pkg.version}`, icon: Info },
+              { label: "Mulai Dikembangkan", value: "12 Juli 2026", icon: Calendar },
               { label: "Status", value: "Aktif Dikembangkan", icon: Activity },
               { label: "Cloud Sync", value: "Aktif", icon: Cloud, valueColor: "text-mint" },
               { label: "Keamanan Data", value: "Terenkripsi", icon: ShieldCheck, valueColor: "text-mint" },
